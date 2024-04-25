@@ -78,7 +78,6 @@ void predict(const sensor_msgs::ImuConstPtr &imu_msg)//更新世界坐标系位�
 
 void update()
 {
-    TicToc t_predict;
     latest_time = current_time;
     tmp_P = estimator.Ps[WINDOW_SIZE];
     tmp_Q = estimator.Rs[WINDOW_SIZE];
@@ -141,8 +140,7 @@ void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
         ROS_WARN("imu message in disorder!");
         return;
     }
-    last_imu_t = imu_msg->header.stamp.toSec();
-
+    
     m_buf.lock();
     imu_buf.push(imu_msg);
     m_buf.unlock();
@@ -288,7 +286,7 @@ void process()
             pubCameraPose(estimator, header);
             pubPointCloud(estimator, header);
             pubTF(estimator, header);
-            pubKeyframe(estimator);
+            //pubKeyframe(estimator);
             //ROS_ERROR("end: %f, at %f", img_msg->header.stamp.toSec(), ros::Time::now().toSec());
         }
 

@@ -195,22 +195,24 @@ void pubCameraPose(const Estimator &estimator, const std_msgs::Header &header)
         Vector3d P = estimator.Ps[i] + estimator.Rs[i] * estimator.tic[0];
         Quaterniond R = Quaterniond(estimator.Rs[i] * estimator.ric[0]);
 
-        nav_msgs::Odometry odometry;
-        odometry.header = header;
-        odometry.header.frame_id = "world";
-        odometry.pose.pose.position.x = P.x();
-        odometry.pose.pose.position.y = P.y();
-        odometry.pose.pose.position.z = P.z();
-        odometry.pose.pose.orientation.x = R.x();
-        odometry.pose.pose.orientation.y = R.y();
-        odometry.pose.pose.orientation.z = R.z();
-        odometry.pose.pose.orientation.w = R.w();
+        // nav_msgs::Odometry odometry;
+        // odometry.header = header;
+        // odometry.header.frame_id = "world";
+        // odometry.pose.pose.position.x = P.x();
+        // odometry.pose.pose.position.y = P.y();
+        // odometry.pose.pose.position.z = P.z();
+        // odometry.pose.pose.orientation.x = R.x();
+        // odometry.pose.pose.orientation.y = R.y();
+        // odometry.pose.pose.orientation.z = R.z();
+        // odometry.pose.pose.orientation.w = R.w();
 
-        pub_camera_pose.publish(odometry);
+        // pub_camera_pose.publish(odometry);
 
+        std_msgs::Header camera_pose_visual_header = header;
+        camera_pose_visual_header.frame_id = "world";
         cameraposevisual.reset();
         cameraposevisual.add_pose(P, R);
-        cameraposevisual.publish_by(pub_camera_pose_visual, odometry.header);
+        cameraposevisual.publish_by(pub_camera_pose_visual, camera_pose_visual_header);
     }
 }
 
@@ -243,34 +245,34 @@ void pubPointCloud(const Estimator &estimator, const std_msgs::Header &header)
     pub_point_cloud.publish(point_cloud);
 
 
-    // pub margined potin
-    sensor_msgs::PointCloud margin_cloud;
-    margin_cloud.header = header;
+    // // pub margined potin
+    // sensor_msgs::PointCloud margin_cloud;
+    // margin_cloud.header = header;
 
-    for (auto &it_per_id : estimator.f_manager.feature)
-    { 
-        int used_num;
-        used_num = it_per_id.feature_per_frame.size();
-        if (!(used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))
-            continue;
-        //if (it_per_id->start_frame > WINDOW_SIZE * 3.0 / 4.0 || it_per_id->solve_flag != 1)
-        //        continue;
+    // for (auto &it_per_id : estimator.f_manager.feature)
+    // { 
+    //     int used_num;
+    //     used_num = it_per_id.feature_per_frame.size();
+    //     if (!(used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))
+    //         continue;
+    //     //if (it_per_id->start_frame > WINDOW_SIZE * 3.0 / 4.0 || it_per_id->solve_flag != 1)
+    //     //        continue;
 
-        if (it_per_id.start_frame == 0 && it_per_id.feature_per_frame.size() <= 2 
-            && it_per_id.solve_flag == 1 )
-        {
-            int imu_i = it_per_id.start_frame;
-            Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
-            Vector3d w_pts_i = estimator.Rs[imu_i] * (estimator.ric[0] * pts_i + estimator.tic[0]) + estimator.Ps[imu_i];
+    //     if (it_per_id.start_frame == 0 && it_per_id.feature_per_frame.size() <= 2 
+    //         && it_per_id.solve_flag == 1 )
+    //     {
+    //         int imu_i = it_per_id.start_frame;
+    //         Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
+    //         Vector3d w_pts_i = estimator.Rs[imu_i] * (estimator.ric[0] * pts_i + estimator.tic[0]) + estimator.Ps[imu_i];
 
-            geometry_msgs::Point32 p;
-            p.x = w_pts_i(0);
-            p.y = w_pts_i(1);
-            p.z = w_pts_i(2);
-            margin_cloud.points.push_back(p);
-        }
-    }
-    pub_margin_cloud.publish(margin_cloud);
+    //         geometry_msgs::Point32 p;
+    //         p.x = w_pts_i(0);
+    //         p.y = w_pts_i(1);
+    //         p.z = w_pts_i(2);
+    //         margin_cloud.points.push_back(p);
+    //     }
+    // }
+    // pub_margin_cloud.publish(margin_cloud);
 }
 
 
