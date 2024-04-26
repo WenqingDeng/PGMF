@@ -669,8 +669,8 @@ void Estimator::optimization()
     }
     if (ESTIMATE_TD)
     {
-        //problem.AddParameterBlock(para_Td[0], 1);
-        //problem.SetParameterBlockConstant(para_Td[0]);
+        problem.AddParameterBlock(para_Td[0], 1);
+        problem.SetParameterBlockConstant(para_Td[0]);
     }
 
     TicToc t_whole, t_prepare;
@@ -709,10 +709,6 @@ void Estimator::optimization()
         for (auto &it_per_frame : it_per_id.feature_per_frame)
         {
             imu_j++;
-            if (imu_i == imu_j)
-            {
-                continue;
-            }
             Vector3d pts_j = it_per_frame.point;
             if (ESTIMATE_TD)
             {
@@ -720,20 +716,13 @@ void Estimator::optimization()
                                                                      it_per_id.feature_per_frame[0].cur_td, it_per_frame.cur_td,
                                                                      it_per_id.feature_per_frame[0].uv.y(), it_per_frame.uv.y());
                     problem.AddResidualBlock(f_td, loss_function, para_Pose[imu_i], para_Pose[imu_j], para_Ex_Pose[0], para_Feature[feature_index], para_Td[0]);
-                    /*
-                    double **para = new double *[5];
-                    para[0] = para_Pose[imu_i];
-                    para[1] = para_Pose[imu_j];
-                    para[2] = para_Ex_Pose[0];
-                    para[3] = para_Feature[feature_index];
-                    para[4] = para_Td[0];
-                    f_td->check(para);
-                    */
             }
             else
             {
-                ProjectionFactor *f = new ProjectionFactor(pts_i, pts_j);
-                problem.AddResidualBlock(f, loss_function, para_Pose[imu_i], para_Pose[imu_j], para_Ex_Pose[0], para_Feature[feature_index]);
+                Eigen::Map<const Eigen::Vector3d> Pi(para_Pose[imu_i]);
+                Eigen::Map<const Eigen::Quaterniond> Qi(para_Pose[imu_i] + 3);
+                ProjectionFactor *f = new ProjectionFactor(pts_i, pts_j, Pi, Qi);
+                problem.AddResidualBlock(f, loss_function, para_Pose[imu_j], para_Ex_Pose[0], para_Feature[feature_index]);
             }
             f_m_cnt++;
         }
@@ -741,40 +730,6 @@ void Estimator::optimization()
 
     ROS_DEBUG("visual measurement count: %d", f_m_cnt);
     ROS_DEBUG("prepare for ceres: %f", t_prepare.toc());
-
-    /*if(relocalization_info)
-    {
-        //printf("set relocalization factor! \n");
-        ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
-        problem.AddParameterBlock(relo_Pose, SIZE_POSE, local_parameterization);
-        int retrive_feature_index = 0;
-        int feature_index = -1;
-        for (auto &it_per_id : f_manager.feature)
-        {
-            it_per_id.used_num = it_per_id.feature_per_frame.size();
-            if (!(it_per_id.used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))
-                continue;
-            ++feature_index;
-            int start = it_per_id.start_frame;
-            if(start <= relo_frame_local_index)
-            {   
-                while((int)match_points[retrive_feature_index].z() < it_per_id.feature_id)
-                {
-                    retrive_feature_index++;
-                }
-                if((int)match_points[retrive_feature_index].z() == it_per_id.feature_id)
-                {
-                    Vector3d pts_j = Vector3d(match_points[retrive_feature_index].x(), match_points[retrive_feature_index].y(), 1.0);
-                    Vector3d pts_i = it_per_id.feature_per_frame[0].point;
-                    
-                    ProjectionFactor *f = new ProjectionFactor(pts_i, pts_j);
-                    problem.AddResidualBlock(f, loss_function, para_Pose[start], relo_Pose, para_Ex_Pose[0], para_Feature[feature_index]);
-                    retrive_feature_index++;
-                }     
-            }
-        }
-
-    }*/
 
     ceres::Solver::Options options;
 
