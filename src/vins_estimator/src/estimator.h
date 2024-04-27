@@ -15,8 +15,9 @@
 #include "factor/imu_factor.h"
 #include "factor/pose_local_parameterization.h"
 #include "factor/projection_factor.h"
-#include "factor/projection_td_factor.h"
 #include "factor/marginalization_factor.h"
+
+#include "PGMF_filter/PGMF_filter.h"
 
 #include <unordered_map>
 #include <queue>
@@ -75,7 +76,6 @@ class Estimator
     Matrix3d Rs[(WINDOW_SIZE + 1)];
     Vector3d Bas[(WINDOW_SIZE + 1)];
     Vector3d Bgs[(WINDOW_SIZE + 1)];
-    double td;
 
     Matrix3d back_R0, last_R, last_R0;
     Vector3d back_P0, last_P, last_P0;
@@ -104,13 +104,13 @@ class Estimator
     vector<Vector3d> key_poses;
     double initial_timestamp;
 
+    FilterPtr PGMF;
 
     double para_Pose[WINDOW_SIZE + 1][SIZE_POSE];
     double para_SpeedBias[WINDOW_SIZE + 1][SIZE_SPEEDBIAS];
     double para_Feature[NUM_OF_F][SIZE_FEATURE];
     double para_Ex_Pose[NUM_OF_CAM][SIZE_POSE];
     double para_Retrive_Pose[SIZE_POSE];
-    double para_Td[1][1];
     double para_Tr[1][1];
 
     int loop_window_index;

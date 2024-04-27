@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
     nav_msgs
     tf
     cv_bridge
+    PGMF_filter
     )
 
 find_package(OpenCV REQUIRED)
@@ -39,7 +40,6 @@ add_executable(vins_estimator
     src/feature_manager.cpp
     src/factor/pose_local_parameterization.cpp
     src/factor/projection_factor.cpp
-    src/factor/projection_td_factor.cpp
     src/factor/marginalization_factor.cpp
     src/utility/utility.cpp
     src/utility/visualization.cpp
