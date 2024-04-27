@@ -56,7 +56,9 @@ class Filter
 
         void MapPoints_initialization(FeatureManager &f_manager, Mat3d Rs[], Vec3d Ps[], Mat3d &ric, Vec3d &tic);
         
-        void update(FeatureManager &f_manager, Mat3d Rs[], Vec3d Ps[], Mat3d &ric, Vec3d &tic);
+        void NewPointGeneration(FeatureManager &f_manager, Mat3d Rs[], Vec3d Ps[], Mat3d &ric, Vec3d &tic);
+
+        void Remove_MapPoint(int MapPoint_Index);
 
         std::map<int, Mappoint> MapPoints;
 

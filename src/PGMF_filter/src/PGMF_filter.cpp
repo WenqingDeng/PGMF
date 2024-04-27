@@ -37,18 +37,27 @@ void Filter::MapPoints_initialization(FeatureManager &f_manager, Mat3d Rs[], Vec
 
 };
 
-void Filter::update(FeatureManager &f_manager, Mat3d Rs[], Vec3d Ps[], Mat3d &ric, Vec3d &tic)
+void Filter::NewPointGeneration(FeatureManager &f_manager, Mat3d Rs[], Vec3d Ps[], Mat3d &ric, Vec3d &tic)
 {
     for (auto &feature : f_manager.feature)
     {
-        if(feature.estimated_depth > 0 && feature.solve_flag == 0)
+        if(feature.solve_flag == 3)
         {
             Mappoint mappoint;
             mappoint.count = 0;
             mappoint.state = MappointState::Initial;
             mappoint.cov = Mat3d::Identity();
-            mappoint.position = feature.estimated_depth * (Rs[feature.start_frame] * ric) * feature.feature_per_frame[0].point + Rs[feature.start_frame] * tic + Ps[feature.start_frame];
+            mappoint.position = feature.initial_guess_of_position;
             MapPoints[feature.feature_id] = mappoint;
         }
     }
 };
+
+void Filter::Remove_MapPoint(int MapPoint_Index)
+{
+    std::map<int, Mappoint>::iterator MapPoint = MapPoints.find(MapPoint_Index);
+    if(MapPoint != MapPoints.end())
+    {
+        MapPoints.erase(MapPoint);
+    }
+}

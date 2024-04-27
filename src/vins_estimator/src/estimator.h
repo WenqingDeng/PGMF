@@ -42,8 +42,6 @@ class Estimator
     bool relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l);
     void slideWindow();
     void solveOdometry();
-    void slideWindowNew();
-    void slideWindowOld();
     void optimization();
     void vector2double();
     void double2vector();
@@ -89,7 +87,7 @@ class Estimator
     vector<Vector3d> angular_velocity_buf[(WINDOW_SIZE + 1)];
 
     int frame_count;
-    int sum_of_outlier, sum_of_back, sum_of_front, sum_of_invalid;
+    int sum_of_outlier, sum_of_invalid;
 
     FeatureManager f_manager;
     MotionEstimator m_estimator;
@@ -108,12 +106,7 @@ class Estimator
 
     double para_Pose[WINDOW_SIZE + 1][SIZE_POSE];
     double para_SpeedBias[WINDOW_SIZE + 1][SIZE_SPEEDBIAS];
-    double para_Feature[NUM_OF_F][SIZE_FEATURE];
     double para_Ex_Pose[NUM_OF_CAM][SIZE_POSE];
-    double para_Retrive_Pose[SIZE_POSE];
-    double para_Tr[1][1];
-
-    int loop_window_index;
 
     MarginalizationInfo *last_marginalization_info;
     vector<double *> last_marginalization_parameter_blocks;

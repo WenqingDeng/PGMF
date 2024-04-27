@@ -52,8 +52,6 @@ void Estimator::clearState()
 
     solver_flag = INITIAL;
     first_imu = false,
-    sum_of_back = 0;
-    sum_of_front = 0;
     frame_count = 0;
     solver_flag = INITIAL;
     initial_timestamp = 0;
@@ -113,17 +111,11 @@ void Estimator::processIMU(double dt, const Vector3d &linear_acceleration, const
 
 void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, const std_msgs::Header &header)
 {
-    ROS_DEBUG("new image coming ------------------------------------------");
-    ROS_DEBUG("Adding feature points %lu", image.size());
     if (f_manager.addFeatureCheckParallax(frame_count, image))
         marginalization_flag = MARGIN_OLD;
     else
         marginalization_flag = MARGIN_SECOND_NEW;
 
-    ROS_DEBUG("this frame is--------------------%s", marginalization_flag ? "reject" : "accept");
-    ROS_DEBUG("%s", marginalization_flag ? "Non-keyframe" : "Keyframe");
-    ROS_DEBUG("Solving %d", frame_count);
-    ROS_DEBUG("number of feature: %d", f_manager.getFeatureCount());
     Headers[frame_count] = header;
 
     ImageFrame imageframe(image, header.stamp.toSec());
@@ -183,8 +175,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
         TicToc t_solve;
         solveOdometry();
         ROS_DEBUG("solver costs: %fms", t_solve.toc());
-ROS_INFO_STREAM("dP:"<<(Ps[WINDOW_SIZE] - Ps[WINDOW_SIZE-1]).norm());
-ROS_INFO_STREAM("ba:"<<Bas[WINDOW_SIZE].transpose());
+
         if (failureDetection())
         {
             ROS_WARN("failure detection!");
@@ -380,11 +371,6 @@ bool Estimator::visualInitialAlign()
         all_image_frame[Headers[i].stamp.toSec()].is_key_frame = true;
     }
 
-    VectorXd dep = f_manager.getDepthVector();
-    for (int i = 0; i < dep.size(); i++)
-        dep[i] = -1;
-    f_manager.clearDepth(dep);
-
     //triangulat on cam pose , no tic
     Vector3d TIC_TMP[NUM_OF_CAM];
     for(int i = 0; i < NUM_OF_CAM; i++)
@@ -409,13 +395,6 @@ bool Estimator::visualInitialAlign()
             kv++;
             Vs[kv] = frame_i->second.R * x.segment<3>(kv * 3);
         }
-    }
-    for (auto &it_per_id : f_manager.feature)
-    {
-        it_per_id.used_num = it_per_id.feature_per_frame.size();
-        if (!(it_per_id.used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))
-            continue;
-        it_per_id.estimated_depth *= s;
     }
 
     Matrix3d R0 = Utility::g2R(g);
@@ -476,10 +455,8 @@ void Estimator::solveOdometry()
         return;
     if (solver_flag == NON_LINEAR)
     {
-        TicToc t_tri;
         f_manager.triangulate(Ps, tic, ric);
-        PGMF->update(f_manager, Rs, Ps, ric[0], tic[0]);
-        ROS_DEBUG("triangulation costs %f", t_tri.toc());
+        PGMF->NewPointGeneration(f_manager, Rs, Ps, ric[0], tic[0]);
         optimization();
     }
 }
@@ -520,10 +497,6 @@ void Estimator::vector2double()
         para_Ex_Pose[i][5] = q.z();
         para_Ex_Pose[i][6] = q.w();
     }
-
-    VectorXd dep = f_manager.getDepthVector();
-    for (int i = 0; i < f_manager.getFeatureCount(); i++)
-        para_Feature[i][0] = dep(i);
 }
 
 void Estimator::double2vector()
@@ -586,11 +559,7 @@ void Estimator::double2vector()
                              para_Ex_Pose[i][5]).toRotationMatrix();
     }
 
-    int FeatureCount = f_manager.getFeatureCount();
-    VectorXd dep(FeatureCount);
-    for (int i = 0; i < FeatureCount; i++)
-        dep(i) = para_Feature[i][0];
-    f_manager.setDepth(dep);
+    f_manager.updatestate();
 }
 
 bool Estimator::failureDetection()
@@ -667,7 +636,6 @@ void Estimator::optimization()
             ROS_DEBUG("estimate extinsic param");
     }
 
-    TicToc t_whole, t_prepare;
     vector2double();
 
     /*if (last_marginalization_info)
@@ -693,24 +661,19 @@ void Estimator::optimization()
         if (!(it_per_id.used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))
             continue;
 
-        int imu_j = it_per_id.start_frame - 1;
-
         Vec3d &pts_w = PGMF->MapPoints[it_per_id.feature_id].position;
 
+        int imu_j = it_per_id.start_frame;
         for (auto &it_per_frame : it_per_id.feature_per_frame)
         {
-            imu_j++;
-            Vector3d pts_j = it_per_frame.point;
-
+            Vector3d &pts_j = it_per_frame.point;
             ProjectionFactor *f = new ProjectionFactor(pts_j);
             problem.AddResidualBlock(f, loss_function, para_Pose[imu_j], para_Ex_Pose[0], pts_w.data());
+            imu_j++;
         }
     }
 
-    ROS_DEBUG("prepare for ceres: %f", t_prepare.toc());
-
     ceres::Solver::Options options;
-
     options.linear_solver_type = ceres::DENSE_SCHUR;
     //options.num_threads = 2;
     options.trust_region_strategy_type = ceres::DOGLEG;
@@ -722,11 +685,9 @@ void Estimator::optimization()
         options.max_solver_time_in_seconds = SOLVER_TIME * 4.0 / 5.0;
     else
         options.max_solver_time_in_seconds = SOLVER_TIME;
-    TicToc t_solver;
     ceres::Solver::Summary summary;
+    TicToc t_solver;
     ceres::Solve(options, &problem, &summary);
-    //cout << summary.BriefReport() << endl;
-    ROS_DEBUG("Iterations : %d", static_cast<int>(summary.iterations.size()));
     ROS_DEBUG("solver costs: %f", t_solver.toc());
 
     double2vector();
@@ -907,8 +868,6 @@ void Estimator::optimization()
         }
     }*/
    // ROS_DEBUG("whole marginalization costs: %f", t_whole_marginalization.toc());
-    
-    ROS_DEBUG("whole time for ceres: %f", t_whole.toc());
 }
 
 void Estimator::slideWindow()
@@ -969,7 +928,23 @@ void Estimator::slideWindow()
                 all_image_frame.erase(t_0);
 
             }
-            slideWindowOld();
+            
+            for (auto it = f_manager.feature.begin(), it_next = f_manager.feature.begin(); it != f_manager.feature.end(); it = it_next)
+            {
+                it_next++;
+
+                if (it->start_frame != 0)
+                    it->start_frame--;
+                else
+                { 
+                    it->feature_per_frame.erase(it->feature_per_frame.begin());
+                    if (it->feature_per_frame.size() == 0)
+                    {
+                        PGMF->Remove_MapPoint(it->feature_id);
+                        f_manager.feature.erase(it);
+                    }
+                }
+            }
         }
     }
     else
@@ -1003,33 +978,27 @@ void Estimator::slideWindow()
             linear_acceleration_buf[WINDOW_SIZE].clear();
             angular_velocity_buf[WINDOW_SIZE].clear();
 
-            slideWindowNew();
+            for (auto it = f_manager.feature.begin(), it_next = f_manager.feature.begin(); it != f_manager.feature.end(); it = it_next)
+            {
+                it_next++;
+
+                if (it->start_frame == frame_count)
+                {
+                    it->start_frame--;
+                }
+                else
+                {
+                    int j = WINDOW_SIZE - 1 - it->start_frame;
+                    if (it->endFrame() < frame_count - 1)
+                        continue;
+                    it->feature_per_frame.erase(it->feature_per_frame.begin() + j);
+                    if (it->feature_per_frame.size() == 0)
+                    {
+                        PGMF->Remove_MapPoint(it->feature_id);
+                        f_manager.feature.erase(it);
+                    }
+                }
+            }
         }
     }
-}
-
-// real marginalization is removed in solve_ceres()
-void Estimator::slideWindowNew()
-{
-    sum_of_front++;
-    f_manager.removeFront(frame_count);
-}
-// real marginalization is removed in solve_ceres()
-void Estimator::slideWindowOld()
-{
-    sum_of_back++;
-
-    bool shift_depth = solver_flag == NON_LINEAR ? true : false;
-    if (shift_depth)
-    {
-        Matrix3d R0, R1;
-        Vector3d P0, P1;
-        R0 = back_R0 * ric[0];
-        R1 = Rs[0] * ric[0];
-        P0 = back_P0 + back_R0 * tic[0];
-        P1 = Ps[0] + Rs[0] * tic[0];
-        f_manager.removeBackShiftDepth(R0, P0, R1, P1);
-    }
-    else
-        f_manager.removeBack();
 }
