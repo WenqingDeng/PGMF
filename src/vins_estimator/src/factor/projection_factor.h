@@ -16,7 +16,7 @@ class ProjectionFactor : public ceres::SizedCostFunction<2, 7, 7, 3>
     };
     virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
 
-    Eigen::Vector3d pts_j;
+    const Eigen::Vector3d pts_j;
     static Eigen::Matrix2d sqrt_info;
     static double sum_t;
 };

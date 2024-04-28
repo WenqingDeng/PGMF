@@ -6,19 +6,8 @@ int FeaturePerId::endFrame()
 }
 
 FeatureManager::FeatureManager(Matrix3d _Rs[])
-    : Rs(_Rs)
-{
-    for (int i = 0; i < NUM_OF_CAM; i++)
-        ric[i].setIdentity();
-}
+    : Rs(_Rs) {}
 
-void FeatureManager::setRic(Matrix3d _ric[])
-{
-    for (int i = 0; i < NUM_OF_CAM; i++)
-    {
-        ric[i] = _ric[i];
-    }
-}
 
 void FeatureManager::clearState()
 {
@@ -134,6 +123,7 @@ void FeatureManager::updatestate()
 
 void FeatureManager::removeFailures()
 {
+    updatestate();
     for (auto it = feature.begin(), it_next = feature.begin();
          it != feature.end(); it = it_next)
     {

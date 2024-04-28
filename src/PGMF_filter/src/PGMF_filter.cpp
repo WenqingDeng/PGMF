@@ -29,10 +29,11 @@ void Filter::MapPoints_initialization(FeatureManager &f_manager, Mat3d Rs[], Vec
 
         Mappoint mappoint;
         mappoint.state = MappointState::Converged;
-        mappoint.count = 0;
         mappoint.cov = Mat3d::Identity() * 1e-4;
         mappoint.position = svd_V.head<3>() / svd_V[3];
         MapPoints[feature.feature_id] = mappoint;
+
+        feature.solve_flag = 1;
     }
 
 };
@@ -44,13 +45,54 @@ void Filter::NewPointGeneration(FeatureManager &f_manager, Mat3d Rs[], Vec3d Ps[
         if(feature.solve_flag == 3)
         {
             Mappoint mappoint;
-            mappoint.count = 0;
-            mappoint.state = MappointState::Initial;
+            mappoint.state = MappointState::Estimate;
             mappoint.cov = Mat3d::Identity();
             mappoint.position = feature.initial_guess_of_position;
             MapPoints[feature.feature_id] = mappoint;
         }
     }
+};
+
+void Filter::updateMapPoint(const int &MapPoint_Index, Pose &old_pose, Vec3d &old_point, Pose &new_pose, Vec3d &new_point)
+{
+    std::map<int, Mappoint>::iterator MapPoint = MapPoints.find(MapPoint_Index);
+    if(MapPoint != MapPoints.end())
+    {
+        if(MapPoint->second.state == MappointState::Converged)
+            return;
+
+        Mat3d new_cov;
+        Vec3d new_position;
+        if(PerpendicularBased_Triangulation(old_pose, old_point, new_pose, new_point, new_position, new_cov))
+        {
+            if(MapPoint->second.state == MappointState::Estimate)
+            {
+                GaussianUniform_Mixture_Filter(MapPoint, new_position, new_cov);
+                ConvergenceJudgment(MapPoint);
+            }
+        }
+    }
+};
+
+bool Filter::PerpendicularBased_Triangulation(Pose &old_pose, Vec3d &old_point, Pose &new_pose, Vec3d &new_point, Vec3d &new_position, Mat3d &new_cov)
+{
+    //
+    return true;
+};
+
+void Filter::GaussianUniform_Mixture_Filter(std::map<int, Mappoint>::iterator &MapPoint, Vec3d &new_position, Mat3d &new_cov)
+{
+    //
+};
+
+void Filter::ConvergenceJudgment(std::map<int, Mappoint>::iterator &MapPoint)
+{
+    //
+};
+
+void Filter::Remove_Failures()
+{
+    //
 };
 
 void Filter::Remove_MapPoint(int MapPoint_Index)

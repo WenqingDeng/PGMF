@@ -13,7 +13,6 @@ void Estimator::setParameter()
         tic[i] = TIC[i];
         ric[i] = RIC[i];
     }
-    f_manager.setRic(ric);
     ProjectionFactor::sqrt_info = FOCAL_LENGTH / 1.5 * Matrix2d::Identity();
 }
 
@@ -185,6 +184,8 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
             ROS_WARN("system reboot!");
             return;
         }
+
+        updateMappoints();
 
         TicToc t_margin;
         slideWindow();
@@ -371,13 +372,7 @@ bool Estimator::visualInitialAlign()
         all_image_frame[Headers[i].stamp.toSec()].is_key_frame = true;
     }
 
-    //triangulat on cam pose , no tic
-    Vector3d TIC_TMP[NUM_OF_CAM];
-    for(int i = 0; i < NUM_OF_CAM; i++)
-        TIC_TMP[i].setZero();
     ric[0] = RIC[0];
-    f_manager.setRic(ric);
-    f_manager.triangulate(Ps, &(TIC_TMP[0]), &(RIC[0]));
 
     double s = (x.tail<1>())(0);
     for (int i = 0; i <= WINDOW_SIZE; i++)
@@ -558,8 +553,6 @@ void Estimator::double2vector()
                              para_Ex_Pose[i][4],
                              para_Ex_Pose[i][5]).toRotationMatrix();
     }
-
-    f_manager.updatestate();
 }
 
 bool Estimator::failureDetection()
@@ -666,8 +659,7 @@ void Estimator::optimization()
         int imu_j = it_per_id.start_frame;
         for (auto &it_per_frame : it_per_id.feature_per_frame)
         {
-            Vector3d &pts_j = it_per_frame.point;
-            ProjectionFactor *f = new ProjectionFactor(pts_j);
+            ProjectionFactor *f = new ProjectionFactor(it_per_frame.point);
             problem.AddResidualBlock(f, loss_function, para_Pose[imu_j], para_Ex_Pose[0], pts_w.data());
             imu_j++;
         }
@@ -1001,4 +993,34 @@ void Estimator::slideWindow()
             }
         }
     }
+}
+
+void Estimator::updateMappoints()
+{
+    Matrix3d Rwc[(WINDOW_SIZE + 1)];
+    Vector3d Pwc[(WINDOW_SIZE + 1)];
+    for(int i = 0; i <= WINDOW_SIZE; i++)
+    {
+        Rwc[i] = Rs[i] * ric[0];
+        Pwc[i] = Ps[i] + Rs[i] * tic[0];
+    }
+
+    for (auto &it_per_id : f_manager.feature)
+    {
+        it_per_id.used_num = it_per_id.feature_per_frame.size();
+        if (!(it_per_id.used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))
+            continue;
+
+        if(it_per_id.solve_flag == 1 && it_per_id.endFrame() == WINDOW_SIZE)
+        {
+            int &start_infex = it_per_id.start_frame;
+            Pose old_pose(Rwc[start_infex], Pwc[start_infex]);
+            Pose new_pose(Rwc[WINDOW_SIZE], Pwc[WINDOW_SIZE]);
+            Vector3d old_point = it_per_id.feature_per_frame[0].point;
+            Vector3d new_point = it_per_id.feature_per_frame.back().point;
+            PGMF->updateMapPoint(it_per_id.feature_id, old_pose, old_point, new_pose, new_point);
+        }
+    }
+
+    PGMF->Remove_Failures();
 }
