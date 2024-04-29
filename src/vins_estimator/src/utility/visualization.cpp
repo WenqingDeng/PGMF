@@ -4,14 +4,10 @@ using namespace ros;
 using namespace Eigen;
 ros::Publisher pub_odometry, pub_latest_odometry;
 ros::Publisher pub_path;
-ros::Publisher pub_point_cloud, pub_margin_cloud;
+ros::Publisher pub_point_cloud;
 ros::Publisher pub_key_poses;
-ros::Publisher pub_camera_pose;
 ros::Publisher pub_camera_pose_visual;
 nav_msgs::Path path;
-
-ros::Publisher pub_keyframe_pose;
-ros::Publisher pub_keyframe_point;
 ros::Publisher pub_extrinsic;
 
 CameraPoseVisualization cameraposevisual(0, 1, 0, 1);
@@ -24,13 +20,9 @@ void registerPub(ros::NodeHandle &n)
     pub_latest_odometry = n.advertise<nav_msgs::Odometry>("imu_propagate", 1000);
     pub_path = n.advertise<nav_msgs::Path>("path", 1000);
     pub_odometry = n.advertise<nav_msgs::Odometry>("odometry", 1000);
-    pub_point_cloud = n.advertise<sensor_msgs::PointCloud>("point_cloud", 1000);
-    pub_margin_cloud = n.advertise<sensor_msgs::PointCloud>("history_cloud", 1000);
+    pub_point_cloud = n.advertise<sensor_msgs::PointCloud2>("point_cloud", 1000);
     pub_key_poses = n.advertise<visualization_msgs::Marker>("key_poses", 1000);
-    pub_camera_pose = n.advertise<nav_msgs::Odometry>("camera_pose", 1000);
     pub_camera_pose_visual = n.advertise<visualization_msgs::MarkerArray>("camera_pose_visual", 1000);
-    pub_keyframe_pose = n.advertise<nav_msgs::Odometry>("keyframe_pose", 1000);
-    pub_keyframe_point = n.advertise<sensor_msgs::PointCloud>("keyframe_point", 1000);
     pub_extrinsic = n.advertise<nav_msgs::Odometry>("extrinsic", 1000);
 
     cameraposevisual.setScale(1);
@@ -193,19 +185,6 @@ void pubCameraPose(const Estimator &estimator, const std_msgs::Header &header)
         Vector3d P = estimator.Ps[i] + estimator.Rs[i] * estimator.tic[0];
         Quaterniond R = Quaterniond(estimator.Rs[i] * estimator.ric[0]);
 
-        // nav_msgs::Odometry odometry;
-        // odometry.header = header;
-        // odometry.header.frame_id = "world";
-        // odometry.pose.pose.position.x = P.x();
-        // odometry.pose.pose.position.y = P.y();
-        // odometry.pose.pose.position.z = P.z();
-        // odometry.pose.pose.orientation.x = R.x();
-        // odometry.pose.pose.orientation.y = R.y();
-        // odometry.pose.pose.orientation.z = R.z();
-        // odometry.pose.pose.orientation.w = R.w();
-
-        // pub_camera_pose.publish(odometry);
-
         std_msgs::Header camera_pose_visual_header = header;
         camera_pose_visual_header.frame_id = "world";
         cameraposevisual.reset();
@@ -217,18 +196,36 @@ void pubCameraPose(const Estimator &estimator, const std_msgs::Header &header)
 
 void pubPointCloud(const Estimator &estimator, const std_msgs::Header &header)
 {
-    sensor_msgs::PointCloud point_cloud;
-    point_cloud.header = header;
-
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Points(new pcl::PointCloud<pcl::PointXYZRGB>);
     for (auto &Mappoint : estimator.PGMF->MapPoints)
     {
         Vector3d &w_pts_i = Mappoint.second.position;
-        geometry_msgs::Point32 p;
-        p.x = w_pts_i(0);
-        p.y = w_pts_i(1);
-        p.z = w_pts_i(2);
-        point_cloud.points.push_back(p);
+        pcl::PointXYZRGB p;
+        p.x = w_pts_i.x();
+        p.y = w_pts_i.y();
+        p.z = w_pts_i.z();
+
+        if(Mappoint.second.state == MappointState::Converged)
+        {
+            p.r = 255;
+            p.g = 0;
+            p.b = 0;
+        }
+        else if(Mappoint.second.state == MappointState::Estimate)
+        {
+            p.r = 255;
+            p.g = 255;
+            p.b = 255;
+        }
+        
+        Points->points.push_back(p);
     }
+    Points->width = 1;
+    Points->height = Points->points.size();
+
+    sensor_msgs::PointCloud2 point_cloud; 
+    pcl::toROSMsg(*Points, point_cloud);
+    point_cloud.header = header;
     pub_point_cloud.publish(point_cloud);
 }
 
@@ -279,5 +276,4 @@ void pubTF(const Estimator &estimator, const std_msgs::Header &header)
     odometry.pose.pose.orientation.z = tmp_q.z();
     odometry.pose.pose.orientation.w = tmp_q.w();
     pub_extrinsic.publish(odometry);
-
 }

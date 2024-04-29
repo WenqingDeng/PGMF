@@ -16,8 +16,14 @@ using Vec3d = Eigen::Vector3d;
 using Vec2d = Eigen::Vector2d;
 using SO3 = Sophus::SO3d;
 
+extern double FOCAL;
 extern double OBSERVATION_SPACE;
 extern double VARIANCE_NORMTHRESHOLD;
+extern double OUTLIER_PROBABILITY;
+extern double INLIER_PROBABILITY;
+extern double an_INITIALVALUE;
+extern double bn_INITIALVALUE;
+extern int FREQUENCE;
 
 enum MappointState
 {
@@ -46,8 +52,8 @@ struct Mappoint
 
     Vec3d position;
     Mat3d cov;
-    double an;
-    double bn;
+    double an = an_INITIALVALUE;
+    double bn = bn_INITIALVALUE;
 };
 
 // Perpendicular-based 3D Gaussian-Uniform Mixture Filter (PGMF)
@@ -58,7 +64,7 @@ class Filter
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
         Filter()
-            : UniformDistributionProbability(1.0 / 30), min_tau(0.1 * sqrt(1e-4))
+            : UniformDistributionProbability(1.0 / OBSERVATION_SPACE), min_tau(0.1 * sqrt(VARIANCE_NORMTHRESHOLD))
         {};
 
         void MapPoints_initialization(FeatureManager &f_manager, Mat3d Rs[], Vec3d Ps[], Mat3d &ric, Vec3d &tic);
@@ -70,6 +76,8 @@ class Filter
         bool PerpendicularBased_Triangulation(Pose &old_pose, Vec3d &old_point, Pose &new_pose, Vec3d &new_point, Vec3d &new_position, Mat3d &new_cov);
 
         void GaussianUniform_Mixture_Filter(std::map<int, Mappoint>::iterator &MapPoint, Vec3d &new_position, Mat3d &new_cov);
+
+        double NormalDistribution_PDF(const Vec3d& X, const Vec3d& mu, const Mat3d &sigma);
 
         void ConvergenceJudgment(std::map<int, Mappoint>::iterator &MapPoint);
 

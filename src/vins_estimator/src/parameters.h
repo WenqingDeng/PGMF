@@ -38,6 +38,15 @@ extern int ESTIMATE_TD;
 extern int ROLLING_SHUTTER;
 extern double ROW, COL;
 
+extern double FOCAL;
+extern double OBSERVATION_SPACE;
+extern double VARIANCE_NORMTHRESHOLD;
+extern double OUTLIER_PROBABILITY;
+extern double INLIER_PROBABILITY;
+extern double an_INITIALVALUE;
+extern double bn_INITIALVALUE;
+extern int FREQUENCE;
+
 
 void readParameters(ros::NodeHandle &n);
 

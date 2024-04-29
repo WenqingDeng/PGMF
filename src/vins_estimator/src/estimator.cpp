@@ -14,6 +14,7 @@ void Estimator::setParameter()
         ric[i] = RIC[i];
     }
     ProjectionFactor::sqrt_info = FOCAL_LENGTH / 1.5 * Matrix2d::Identity();
+    PGMF = std::make_shared<Filter>();
 }
 
 void Estimator::clearState()
@@ -66,8 +67,6 @@ void Estimator::clearState()
     last_marginalization_parameter_blocks.clear();
 
     f_manager.clearState();
-
-    PGMF = std::make_shared<Filter>();
 
     failure_occur = 0;
 }
@@ -202,6 +201,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
         last_P0 = Ps[0];
     }
 }
+
 bool Estimator::initialStructure()
 {
     TicToc t_sfm;
@@ -647,32 +647,38 @@ void Estimator::optimization()
         IMUFactor* imu_factor = new IMUFactor(pre_integrations[j]);
         problem.AddResidualBlock(imu_factor, NULL, para_Pose[i], para_SpeedBias[i], para_Pose[j], para_SpeedBias[j]);
     }
-
+int num_all = 0;
+int num_conv = 0;
     for (auto &it_per_id : f_manager.feature)
     {
         it_per_id.used_num = it_per_id.feature_per_frame.size();
         if (!(it_per_id.used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))
             continue;
 
-        Vec3d &pts_w = PGMF->MapPoints[it_per_id.feature_id].position;
+        std::map<int, Mappoint>::iterator pts_w = PGMF->MapPoints.find(it_per_id.feature_id);
+        if (pts_w == PGMF->MapPoints.end() || pts_w->second.state == MappointState::Initial)
+            continue;
 
         int imu_j = it_per_id.start_frame;
         for (auto &it_per_frame : it_per_id.feature_per_frame)
         {
             ProjectionFactor *f = new ProjectionFactor(it_per_frame.point);
-            problem.AddResidualBlock(f, loss_function, para_Pose[imu_j], para_Ex_Pose[0], pts_w.data());
+            problem.AddResidualBlock(f, loss_function, para_Pose[imu_j], para_Ex_Pose[0], pts_w->second.position.data());
             imu_j++;
         }
-    }
 
+        if (pts_w->second.state == MappointState::Converged)
+        {
+            problem.SetParameterBlockConstant(pts_w->second.position.data());
+num_conv++;
+        }
+num_all++;
+    }
+ROS_INFO_STREAM("converge:"<<num_conv<<" est:"<<num_all-num_conv);
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::DENSE_SCHUR;
-    //options.num_threads = 2;
     options.trust_region_strategy_type = ceres::DOGLEG;
     options.max_num_iterations = NUM_ITERATIONS;
-    //options.use_explicit_schur_complement = true;
-    //options.minimizer_progress_to_stdout = true;
-    //options.use_nonmonotonic_steps = true;
     if (marginalization_flag == MARGIN_OLD)
         options.max_solver_time_in_seconds = SOLVER_TIME * 4.0 / 5.0;
     else
