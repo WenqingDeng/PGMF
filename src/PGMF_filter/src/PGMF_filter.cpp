@@ -28,8 +28,8 @@ void Filter::MapPoints_initialization(FeatureManager &f_manager, Mat3d Rs[], Vec
         Eigen::Vector4d svd_V = Eigen::JacobiSVD<Eigen::MatrixXd>(A, Eigen::ComputeThinV).matrixV().rightCols<1>();
 
         Mappoint mappoint;
-        mappoint.state = MappointState::Converged;
-        mappoint.cov = Mat3d::Identity() * 1e-4;
+        mappoint.state = MappointState::Estimate;
+        mappoint.cov = Mat3d::Identity();
         mappoint.position = svd_V.head<3>() / svd_V[3];
         MapPoints[feature.feature_id] = mappoint;
 
@@ -108,9 +108,8 @@ bool Filter::PerpendicularBased_Triangulation(Pose &old_pose, Vec3d &old_point, 
 
     // compute new_cov
     Vec3d P1P2 = (s2 * O2X2 + t2) - (s1 * O1X1 + t1);
-
     double tau_alpha = std::max(P1P2.norm() / 6.0, min_tau); // tau alpha error
-//ROS_INFO_STREAM("tau_alpha:"<<tau_alpha);
+
     double tau_beta; // tau beta error : one pixel error
     Vec3d t = t12 - P1P2;
     Vec3d a = s1 * O1X1 - t;
@@ -120,10 +119,9 @@ bool Filter::PerpendicularBased_Triangulation(Pose &old_pose, Vec3d &old_point, 
     double beta = std::acos(-a.dot(t) / (t_norm * a_norm)) + std::atan(1.0 / FOCAL);
     double O1P1_plus = t_norm * std::sin(beta) / std::sin(M_PI - alpha - beta);
     tau_beta = std::max(std::abs(O1P1_plus - s1 * O1X1.norm()), min_tau);
-//ROS_INFO_STREAM("tau_beta:"<<tau_beta);
-    Mat3d tau; tau << tau_beta * tau_beta, 0, 0,
-                        0, tau_alpha * tau_alpha, 0,
-                        0, 0, tau_beta*tau_beta;
+    Mat3d tau; tau << tau_beta, 0, 0,
+                        0, tau_alpha, 0,
+                        0, 0, tau_beta;
 
     Vec3d Z_basic = O1X1.normalized();
     Vec3d Y_basic = P1P2.normalized();
@@ -181,7 +179,7 @@ void Filter::ConvergenceJudgment(std::map<int, Mappoint>::iterator &MapPoint)
     {
         MapPoint->second.state = MappointState::Throw;
     }
-    else if(pai > INLIER_PROBABILITY)
+    else if(pai > INLIER_PROBABILITY && MapPoint->second.count > 7)
     {
         if(MapPoint->second.cov.jacobiSvd(Eigen::EigenvaluesOnly).singularValues()(0) < VARIANCE_NORMTHRESHOLD)
         {

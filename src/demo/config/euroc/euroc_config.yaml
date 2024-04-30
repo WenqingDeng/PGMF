@@ -86,5 +86,5 @@ an_InitialValue: 10.0      # initial value of an
 bn_InitialValue: 10.0      # initial value of bn
 observation_space: 30.0    # observation space of camera
 outlier_probability: 0.4          # outlier criteria: less than outlier probability
-inlier_probability: 0.55           # inlier criteria: higher than inlier probability
-variance_NormThreshold: 1.0e-4     # 2-norm threshold of variance
+inlier_probability: 0.6           # inlier criteria: higher than inlier probability
+variance_NormThreshold: 1.0e-2     # 2-norm threshold of variance
