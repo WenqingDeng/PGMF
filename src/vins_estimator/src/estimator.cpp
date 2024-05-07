@@ -185,8 +185,6 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
         TicToc t_solve;
         solveOdometry();
         ROS_DEBUG("solver costs: %fms", t_solve.toc());
-ROS_INFO_STREAM("dP:"<<(Ps[WINDOW_SIZE] - Ps[WINDOW_SIZE-1]).norm());
-ROS_INFO_STREAM("ba:"<<Bas[WINDOW_SIZE].transpose());
         if (failureDetection())
         {
             ROS_WARN("failure detection!");
