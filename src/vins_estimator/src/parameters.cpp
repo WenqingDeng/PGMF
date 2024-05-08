@@ -67,7 +67,7 @@ void readParameters(ros::NodeHandle &n)
 
     std::string OUTPUT_PATH;
     fsSettings["output_path"] >> OUTPUT_PATH;
-    VINS_RESULT_PATH = OUTPUT_PATH + "/vins_result_no_loop.csv";
+    VINS_RESULT_PATH = OUTPUT_PATH + "/PGMF.tum";
     std::cout << "result path: " << VINS_RESULT_PATH << std::endl;
 
     // create folder if not exists
@@ -146,6 +146,7 @@ void readParameters(ros::NodeHandle &n)
     OUTLIER_PROBABILITY = static_cast<double> (fsSettings["outlier_probability"]);
     INLIER_PROBABILITY = static_cast<double> (fsSettings["inlier_probability"]);
     VARIANCE_NORMTHRESHOLD = static_cast<double> (fsSettings["variance_NormThreshold"]);
+    VARIANCE_NORMTHRESHOLD = VARIANCE_NORMTHRESHOLD * VARIANCE_NORMTHRESHOLD;
     an_INITIALVALUE = static_cast<double> (fsSettings["an_InitialValue"]);
     bn_INITIALVALUE = static_cast<double> (fsSettings["bn_InitialValue"]);
     FREQUENCE = static_cast<int> (fsSettings["freq"]);

@@ -678,7 +678,6 @@ ROS_INFO_STREAM("converge:"<<num_conv<<" est:"<<num_all-num_conv);
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::DENSE_SCHUR;
     options.trust_region_strategy_type = ceres::DOGLEG;
-    options.max_num_iterations = NUM_ITERATIONS;
     if (marginalization_flag == MARGIN_OLD)
         options.max_solver_time_in_seconds = SOLVER_TIME * 4.0 / 5.0;
     else
@@ -1019,14 +1018,12 @@ void Estimator::updateMappoints()
 
         if(it_per_id.solve_flag == 1 && it_per_id.endFrame() == WINDOW_SIZE)
         {
-            int &start_infex = it_per_id.start_frame;
-            Pose old_pose(Rwc[start_infex], Pwc[start_infex]);
+            int &start_index = it_per_id.start_frame;
+            Pose old_pose(Rwc[start_index], Pwc[start_index]);
             Pose new_pose(Rwc[WINDOW_SIZE], Pwc[WINDOW_SIZE]);
-            Vector3d old_point = it_per_id.feature_per_frame[0].point;
-            Vector3d new_point = it_per_id.feature_per_frame.back().point;
+            Vector3d &old_point = it_per_id.feature_per_frame[0].point;
+            Vector3d &new_point = it_per_id.feature_per_frame.back().point;
             PGMF->updateMapPoint(it_per_id.feature_id, old_pose, old_point, new_pose, new_point);
         }
     }
-
-    PGMF->Remove_Failures();
 }

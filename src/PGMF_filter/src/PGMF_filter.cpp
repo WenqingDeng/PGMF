@@ -119,9 +119,9 @@ bool Filter::PerpendicularBased_Triangulation(Pose &old_pose, Vec3d &old_point, 
     double beta = std::acos(-a.dot(t) / (t_norm * a_norm)) + std::atan(1.0 / FOCAL);
     double O1P1_plus = t_norm * std::sin(beta) / std::sin(M_PI - alpha - beta);
     tau_beta = std::max(std::abs(O1P1_plus - s1 * O1X1.norm()), min_tau);
-    Mat3d tau; tau << tau_beta, 0, 0,
-                        0, tau_alpha, 0,
-                        0, 0, tau_beta;
+    Mat3d tau; tau << tau_beta * tau_beta, 0, 0,
+                        0, tau_alpha * tau_alpha, 0,
+                        0, 0, tau_beta * tau_beta;
 
     Vec3d Z_basic = O1X1.normalized();
     Vec3d Y_basic = P1P2.normalized();
@@ -178,35 +178,15 @@ void Filter::ConvergenceJudgment(std::map<int, Mappoint>::iterator &MapPoint)
     if(pai < OUTLIER_PROBABILITY)
     {
         MapPoint->second.state = MappointState::Throw;
+        MapPoints.erase(MapPoint);
     }
-    else if(pai > INLIER_PROBABILITY && MapPoint->second.count > 7)
+    else if(pai > INLIER_PROBABILITY)
     {
         if(MapPoint->second.cov.jacobiSvd(Eigen::EigenvaluesOnly).singularValues()(0) < VARIANCE_NORMTHRESHOLD)
         {
 ROS_INFO_STREAM("Converged cost:"<<MapPoint->second.count<<" pai:"<<pai);
             MapPoint->second.state = MappointState::Converged;
         }
-    }
-};
-
-void Filter::Remove_Failures()
-{
-    for(std::map<int, Mappoint>::iterator MapPoint = MapPoints.begin(); MapPoint != MapPoints.end();)
-    {
-        if(MapPoint->second.state == MappointState::Throw)
-        {
-            MapPoints.erase(MapPoint++);
-            continue;
-        }
-        if((MapPoint->second.state == MappointState::Estimate) || (MapPoint->second.state == MappointState::Initial))
-        {
-            if(++(MapPoint->second.count) > 3 * FREQUENCE)
-            {
-                MapPoints.erase(MapPoint++);
-                continue;
-            }
-        }
-        ++MapPoint;
     }
 };
 
