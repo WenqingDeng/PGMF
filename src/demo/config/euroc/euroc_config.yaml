@@ -84,7 +84,7 @@ visualize_camera_size: 0.4      # size of camera marker in RVIZ
 # PGMF parameters
 an_InitialValue: 10.0      # initial value of an
 bn_InitialValue: 10.0      # initial value of bn
-observation_space: 30.0    # observation space of camera
+observation_space: 100.0    # observation space of camera
 outlier_probability: 0.4          # outlier criteria: less than outlier probability
 inlier_probability: 0.6           # inlier criteria: higher than inlier probability
 variance_NormThreshold: 1.0e-2     # 2-norm threshold of variance

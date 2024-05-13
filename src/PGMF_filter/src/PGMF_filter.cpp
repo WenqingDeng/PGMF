@@ -29,7 +29,6 @@ void Filter::MapPoints_initialization(FeatureManager &f_manager, Mat3d Rs[], Vec
 
         Mappoint mappoint;
         mappoint.state = MappointState::Estimate;
-        mappoint.cov = Mat3d::Identity();
         mappoint.position = svd_V.head<3>() / svd_V[3];
         MapPoints[feature.feature_id] = mappoint;
 
@@ -46,7 +45,6 @@ void Filter::NewPointGeneration(FeatureManager &f_manager, Mat3d Rs[], Vec3d Ps[
         {
             Mappoint mappoint;
             mappoint.state = MappointState::Estimate;
-            mappoint.cov = Mat3d::Identity();
             mappoint.position = feature.initial_guess_of_position;
             MapPoints[feature.feature_id] = mappoint;
         }
@@ -108,7 +106,7 @@ bool Filter::PerpendicularBased_Triangulation(Pose &old_pose, Vec3d &old_point, 
 
     // compute new_cov
     Vec3d P1P2 = (s2 * O2X2 + t2) - (s1 * O1X1 + t1);
-    double tau_alpha = std::max(P1P2.norm() / 6.0, min_tau); // tau alpha error
+    double tau_alpha = std::max(P1P2.norm(), min_tau); // tau alpha error
 
     double tau_beta; // tau beta error : one pixel error
     Vec3d t = t12 - P1P2;
