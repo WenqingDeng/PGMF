@@ -64,7 +64,7 @@ class Filter
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
         Filter()
-            : UniformDistributionProbability(1.0 / OBSERVATION_SPACE), min_tau(0.01 * sqrt(VARIANCE_NORMTHRESHOLD))
+            : UniformDistributionProbability(1.0 / OBSERVATION_SPACE), min_tau(0.1 * sqrt(VARIANCE_NORMTHRESHOLD))
         {};
 
         void MapPoints_initialization(FeatureManager &f_manager, Mat3d Rs[], Vec3d Ps[], Mat3d &ric, Vec3d &tic);

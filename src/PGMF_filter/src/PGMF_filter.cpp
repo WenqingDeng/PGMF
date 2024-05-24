@@ -180,7 +180,7 @@ void Filter::ConvergenceJudgment(std::map<int, Mappoint>::iterator &MapPoint)
     }
     else if(pai > INLIER_PROBABILITY)
     {
-        if(MapPoint->second.cov.jacobiSvd(Eigen::EigenvaluesOnly).singularValues()(0) < VARIANCE_NORMTHRESHOLD)
+        if(MapPoint->second.cov.jacobiSvd(Eigen::EigenvaluesOnly).singularValues()(2) < VARIANCE_NORMTHRESHOLD)
         {
 ROS_INFO_STREAM("Converged cost:"<<MapPoint->second.count<<" pai:"<<pai);
             MapPoint->second.state = MappointState::Converged;

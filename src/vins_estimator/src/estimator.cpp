@@ -689,15 +689,6 @@ ROS_INFO_STREAM("converge:"<<num_conv<<" est:"<<num_all-num_conv);
 
     double2vector();
 
-// if(summary.termination_type == ceres::FAILURE)
-// {
-// Ps[WINDOW_SIZE] = Ps[WINDOW_SIZE - 1];
-// Vs[WINDOW_SIZE] = Vs[WINDOW_SIZE - 1];
-// Rs[WINDOW_SIZE] = Rs[WINDOW_SIZE - 1];
-// Bas[WINDOW_SIZE] = Bas[WINDOW_SIZE - 1];
-// Bgs[WINDOW_SIZE] = Bgs[WINDOW_SIZE - 1];
-// }
-
 /*
     TicToc t_whole_marginalization;
     if (marginalization_flag == MARGIN_OLD)
