@@ -56,7 +56,8 @@ void Filter::updateMapPoint(const int &MapPoint_Index, Pose &old_pose, Vec3d &ol
     std::map<int, Mappoint>::iterator MapPoint = MapPoints.find(MapPoint_Index);
     if(MapPoint != MapPoints.end())
     {
-        if(MapPoint->second.state == MappointState::Converged)
+        MapPoint->second.count++;
+        if(MapPoint->second.state == MappointState::Converged || MapPoint->second.state == MappointState::Throw)
             return;
 
         Mat3d new_cov;
@@ -175,7 +176,6 @@ void Filter::ConvergenceJudgment(std::map<int, Mappoint>::iterator &MapPoint)
     if(pai < OUTLIER_PROBABILITY)
     {
         MapPoint->second.state = MappointState::Throw;
-        MapPoints.erase(MapPoint);
     }
     else if(pai > INLIER_PROBABILITY)
     {

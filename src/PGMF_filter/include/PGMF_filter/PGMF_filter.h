@@ -54,6 +54,14 @@ struct Mappoint
     double bn = bn_INITIALVALUE;
 };
 
+struct statistical_data
+{
+    int con = 0;
+    int est = 0;
+    int div = 0;
+    int no = 0;
+};
+
 // Perpendicular-based 3D Gaussian-Uniform Mixture Filter (PGMF)
 class Filter
 {
@@ -83,7 +91,10 @@ class Filter
 
         void Remove_MapPoint(int MapPoint_Index);
 
+        void printStatistics();
+
         std::map<int, Mappoint> MapPoints;
+        std::map<int, statistical_data> statistics;
 
     private:
         double UniformDistributionProbability;

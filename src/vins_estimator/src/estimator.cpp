@@ -641,7 +641,7 @@ void Estimator::optimization()
             continue;
 
         std::map<int, Mappoint>::iterator pts_w = PGMF->MapPoints.find(it_per_id.feature_id);
-        if (pts_w == PGMF->MapPoints.end() || pts_w->second.state == MappointState::Initial)
+        if (pts_w == PGMF->MapPoints.end() || pts_w->second.state == MappointState::Initial || pts_w->second.state == MappointState::Throw)
             continue;
 
         int imu_j = it_per_id.start_frame;
