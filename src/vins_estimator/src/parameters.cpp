@@ -18,10 +18,22 @@ int ESTIMATE_EXTRINSIC;
 int ESTIMATE_TD;
 int ROLLING_SHUTTER;
 std::string EX_CALIB_RESULT_PATH;
+std::string PGMF_RESULT_PATH;
+std::string PGMF_percent_RESULT_PATH;
+std::string PGMF_ConTimes_RESULT_PATH;
 std::string VINS_RESULT_PATH;
 std::string IMU_TOPIC;
 double ROW, COL;
 double TD, TR;
+
+double FOCAL = 460.0;
+double OBSERVATION_SPACE;
+double VARIANCE_NORMTHRESHOLD;
+double OUTLIER_PROBABILITY;
+double INLIER_PROBABILITY;
+double an_INITIALVALUE;
+double bn_INITIALVALUE;
+int FREQUENCE;
 
 template <typename T>
 T readParam(ros::NodeHandle &n, std::string name)
@@ -59,6 +71,10 @@ void readParameters(ros::NodeHandle &n)
     std::string OUTPUT_PATH;
     fsSettings["output_path"] >> OUTPUT_PATH;
     VINS_RESULT_PATH = OUTPUT_PATH + "/vins.tum";
+    VINS_RESULT_PATH = OUTPUT_PATH + "/PGMF.tum";
+    PGMF_RESULT_PATH = OUTPUT_PATH + "/PGMF_result.txt";
+    PGMF_percent_RESULT_PATH = OUTPUT_PATH + "/PGMF_percent_result.txt";
+    PGMF_ConTimes_RESULT_PATH = OUTPUT_PATH + "/PGMF_ConTimes_result.txt";
     std::cout << "result path: " << VINS_RESULT_PATH << std::endl;
 
     // create folder if not exists
@@ -132,6 +148,15 @@ void readParameters(ros::NodeHandle &n)
     {
         TR = 0;
     }
+
+    OBSERVATION_SPACE = static_cast<double> (fsSettings["observation_space"]);
+    OUTLIER_PROBABILITY = static_cast<double> (fsSettings["outlier_probability"]);
+    INLIER_PROBABILITY = static_cast<double> (fsSettings["inlier_probability"]);
+    VARIANCE_NORMTHRESHOLD = static_cast<double> (fsSettings["variance_NormThreshold"]);
+    VARIANCE_NORMTHRESHOLD = VARIANCE_NORMTHRESHOLD * VARIANCE_NORMTHRESHOLD;
+    an_INITIALVALUE = static_cast<double> (fsSettings["an_InitialValue"]);
+    bn_INITIALVALUE = static_cast<double> (fsSettings["bn_InitialValue"]);
+    FREQUENCE = static_cast<int> (fsSettings["freq"]);
     
     fsSettings.release();
 }

@@ -60,15 +60,15 @@ void RefineGravity(map<double, ImageFrame> &all_image_frame, Vector3d &g, Vector
     int all_frame_count = all_image_frame.size();
     int n_state = all_frame_count * 3 + 2 + 1;
 
-    MatrixXd A{n_state, n_state};
-    A.setZero();
-    VectorXd b{n_state};
-    b.setZero();
-
     map<double, ImageFrame>::iterator frame_i;
     map<double, ImageFrame>::iterator frame_j;
     for(int k = 0; k < 4; k++)
     {
+        MatrixXd A{n_state, n_state};
+        A.setZero();
+        VectorXd b{n_state};
+        b.setZero();
+
         MatrixXd lxly(3, 2);
         lxly = TangentBasis(g0);
         int i = 0;
@@ -112,12 +112,11 @@ void RefineGravity(map<double, ImageFrame> &all_image_frame, Vector3d &g, Vector
             A.block<6, 3>(i * 3, n_state - 3) += r_A.topRightCorner<6, 3>();
             A.block<3, 6>(n_state - 3, i * 3) += r_A.bottomLeftCorner<3, 6>();
         }
-            A = A * 1000.0;
-            b = b * 1000.0;
-            x = A.ldlt().solve(b);
-            VectorXd dg = x.segment<2>(n_state - 3);
-            g0 = (g0 + lxly * dg).normalized() * G.norm();
-            //double s = x(n_state - 1);
+        A = A * 1000.0;
+        b = b * 1000.0;
+        x = A.ldlt().solve(b);
+        VectorXd dg = x.segment<2>(n_state - 3);
+        g0 = (g0 + lxly * dg).normalized() * G.norm();
     }   
     g = g0;
 }

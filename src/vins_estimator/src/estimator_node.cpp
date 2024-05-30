@@ -78,7 +78,6 @@ void predict(const sensor_msgs::ImuConstPtr &imu_msg)//更新世界坐标系位�
 
 void update()
 {
-    TicToc t_predict;
     latest_time = current_time;
     tmp_P = estimator.Ps[WINDOW_SIZE];
     tmp_Q = estimator.Rs[WINDOW_SIZE];
@@ -104,14 +103,14 @@ getMeasurements()
         if (imu_buf.empty() || feature_buf.empty())
             return measurements;
 
-        if (!(imu_buf.back()->header.stamp.toSec() > feature_buf.front()->header.stamp.toSec() + estimator.td))
+        if (!(imu_buf.back()->header.stamp.toSec() > feature_buf.front()->header.stamp.toSec()))
         {
             //ROS_WARN("wait for imu, only should happen at the beginning");
             sum_of_wait++;
             return measurements;
         }
 
-        if (!(imu_buf.front()->header.stamp.toSec() < feature_buf.front()->header.stamp.toSec() + estimator.td))
+        if (!(imu_buf.front()->header.stamp.toSec() < feature_buf.front()->header.stamp.toSec()))
         {
             ROS_WARN("throw img, only should happen at the beginning");
             feature_buf.pop();
@@ -121,7 +120,7 @@ getMeasurements()
         feature_buf.pop();
 
         std::vector<sensor_msgs::ImuConstPtr> IMUs;
-        while (imu_buf.front()->header.stamp.toSec() < img_msg->header.stamp.toSec() + estimator.td)
+        while (imu_buf.front()->header.stamp.toSec() < img_msg->header.stamp.toSec())
         {
             IMUs.emplace_back(imu_buf.front());
             imu_buf.pop();
@@ -141,8 +140,7 @@ void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
         ROS_WARN("imu message in disorder!");
         return;
     }
-    last_imu_t = imu_msg->header.stamp.toSec();
-
+    
     m_buf.lock();
     imu_buf.push(imu_msg);
     m_buf.unlock();
@@ -216,7 +214,7 @@ void process()
             for (auto &imu_msg : measurement.first)
             {
                 double t = imu_msg->header.stamp.toSec();
-                double img_t = img_msg->header.stamp.toSec() + estimator.td;
+                double img_t = img_msg->header.stamp.toSec();
                 if (t <= img_t)
                 { 
                     if (current_time < 0)
@@ -288,8 +286,6 @@ void process()
             pubCameraPose(estimator, header);
             pubPointCloud(estimator, header);
             pubTF(estimator, header);
-            pubKeyframe(estimator);
-            //ROS_ERROR("end: %f, at %f", img_msg->header.stamp.toSec(), ros::Time::now().toSec());
         }
 
         m_estimator.unlock();

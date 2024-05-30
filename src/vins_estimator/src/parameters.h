@@ -30,6 +30,9 @@ extern double BIAS_GYR_THRESHOLD;
 extern double SOLVER_TIME;
 extern int NUM_ITERATIONS;
 extern std::string EX_CALIB_RESULT_PATH;
+extern std::string PGMF_RESULT_PATH;
+extern std::string PGMF_percent_RESULT_PATH;
+extern std::string PGMF_ConTimes_RESULT_PATH;
 extern std::string VINS_RESULT_PATH;
 extern std::string IMU_TOPIC;
 extern double TD;
@@ -37,6 +40,15 @@ extern double TR;
 extern int ESTIMATE_TD;
 extern int ROLLING_SHUTTER;
 extern double ROW, COL;
+
+extern double FOCAL;
+extern double OBSERVATION_SPACE;
+extern double VARIANCE_NORMTHRESHOLD;
+extern double OUTLIER_PROBABILITY;
+extern double INLIER_PROBABILITY;
+extern double an_INITIALVALUE;
+extern double bn_INITIALVALUE;
+extern int FREQUENCE;
 
 
 void readParameters(ros::NodeHandle &n);
