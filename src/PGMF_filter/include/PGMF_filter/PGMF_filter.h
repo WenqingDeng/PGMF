@@ -2,11 +2,9 @@
 
 #include <map>
 #include <ros/ros.h>
-// #include <Eigen/Dense>
 #include <Eigen/Core>
 #include <sophus/so3.hpp>
 #include <opencv2/opencv.hpp>
-// #include <opencv2/core/eigen.hpp>
 
 #include "../../../vins_estimator/src/parameters.h"
 #include "../../../vins_estimator/src/feature_manager.h"

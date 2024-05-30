@@ -1,5 +1,6 @@
 <launch>
-    <arg name="config_path" default = "$(find demo)/config/euroc/euroc_config.yaml" />
+
+    <arg name="config_path" default = "$(find demo)/config/euroc_config.yaml" />
 	  <arg name="vins_path" default = "$(find demo)/../" />
     
     <node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log">
@@ -13,8 +14,5 @@
     </node>
 
     <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find demo)/config/vins_rviz_config.rviz" />
-    
-    <arg name="bagfile_path" default = "/home/dwq/Dataset_euroc/MH_01_easy.bag" />
-    <node name="rosbag_play" pkg="rosbag" type="play" args="$(arg bagfile_path)"  />
 
 </launch>

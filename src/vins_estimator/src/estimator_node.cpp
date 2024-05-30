@@ -276,8 +276,8 @@ void process()
             }
             estimator.processImage(image, img_msg->header);
 
-            //double whole_t = t_s.toc();
-            //printStatistics(estimator, whole_t);
+            double whole_t = t_s.toc();
+            printStatistics(estimator, whole_t);
             std_msgs::Header header = img_msg->header;
             header.frame_id = "world";
 
@@ -286,7 +286,7 @@ void process()
             pubCameraPose(estimator, header);
             pubPointCloud(estimator, header);
             pubTF(estimator, header);
-            //ROS_ERROR("end: %f, at %f", img_msg->header.stamp.toSec(), ros::Time::now().toSec());
+            ROS_ERROR("end: %f, at %f", img_msg->header.stamp.toSec(), ros::Time::now().toSec());
         }
 
         m_estimator.unlock();
