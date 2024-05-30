@@ -647,8 +647,9 @@ void Estimator::optimization()
         IMUFactor* imu_factor = new IMUFactor(pre_integrations[j]);
         problem.AddResidualBlock(imu_factor, NULL, para_Pose[i], para_SpeedBias[i], para_Pose[j], para_SpeedBias[j]);
     }
-int num_all = 0;
-int num_conv = 0;
+    
+    int num_all = 0;
+    int num_conv = 0;
     for (auto &it_per_id : f_manager.feature)
     {
         it_per_id.used_num = it_per_id.feature_per_frame.size();
@@ -656,7 +657,7 @@ int num_conv = 0;
             continue;
 
         std::map<int, Mappoint>::iterator pts_w = PGMF->MapPoints.find(it_per_id.feature_id);
-        if (pts_w == PGMF->MapPoints.end() || pts_w->second.state == MappointState::Initial)
+        if (pts_w == PGMF->MapPoints.end() || pts_w->second.state == MappointState::Initial || pts_w->second.state == MappointState::Throw)
             continue;
 
         int imu_j = it_per_id.start_frame;
@@ -670,11 +671,25 @@ int num_conv = 0;
         if (pts_w->second.state == MappointState::Converged)
         {
             problem.SetParameterBlockConstant(pts_w->second.position.data());
-num_conv++;
+            num_conv++;
         }
-num_all++;
+        num_all++;
     }
-ROS_INFO_STREAM("converge:"<<num_conv<<" est:"<<num_all-num_conv);
+
+    {
+        static const double first_time = Headers[WINDOW_SIZE].stamp.toSec();
+        double dt = Headers[WINDOW_SIZE].stamp.toSec() - first_time;
+        using namespace std;
+        ofstream foutC(PGMF_RESULT_PATH, ios::app);
+        foutC.setf(ios::fixed, ios::floatfield);
+        foutC.precision(9);
+        foutC << dt<< " ";
+        foutC.precision(5);
+        foutC << num_conv << " "
+                << num_all-num_conv << endl;
+        foutC.close();
+    }
+
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::DENSE_SCHUR;
     options.trust_region_strategy_type = ceres::DOGLEG;

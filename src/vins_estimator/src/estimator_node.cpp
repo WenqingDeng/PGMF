@@ -276,6 +276,11 @@ void process()
             }
             estimator.processImage(image, img_msg->header);
 
+            {
+                static int times = 0; times++;
+                if(times == 1838) estimator.PGMF->printStatistics();
+            }
+
             //double whole_t = t_s.toc();
             //printStatistics(estimator, whole_t);
             std_msgs::Header header = img_msg->header;

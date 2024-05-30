@@ -56,7 +56,8 @@ void Filter::updateMapPoint(const int &MapPoint_Index, Pose &old_pose, Vec3d &ol
     std::map<int, Mappoint>::iterator MapPoint = MapPoints.find(MapPoint_Index);
     if(MapPoint != MapPoints.end())
     {
-        if(MapPoint->second.state == MappointState::Converged)
+        MapPoint->second.count++;
+        if(MapPoint->second.state == MappointState::Converged || MapPoint->second.state == MappointState::Throw)
             return;
 
         Mat3d new_cov;
@@ -172,17 +173,23 @@ double Filter::NormalDistribution_PDF(const Vec3d& X, const Vec3d& mu, const Mat
 void Filter::ConvergenceJudgment(std::map<int, Mappoint>::iterator &MapPoint)
 {
     double pai = MapPoint->second.an / (MapPoint->second.an + MapPoint->second.bn);
-//ROS_INFO_STREAM("pai:"<<pai);
     if(pai < OUTLIER_PROBABILITY)
     {
         MapPoint->second.state = MappointState::Throw;
-        MapPoints.erase(MapPoint);
     }
     else if(pai > INLIER_PROBABILITY)
     {
         if(MapPoint->second.cov.jacobiSvd(Eigen::EigenvaluesOnly).singularValues()(2) < VARIANCE_NORMTHRESHOLD)
         {
-ROS_INFO_STREAM("Converged cost:"<<MapPoint->second.count<<" pai:"<<pai);
+            {
+                using namespace std;
+                ofstream foutC(PGMF_ConTimes_RESULT_PATH, ios::app);
+                foutC.setf(ios::fixed, ios::floatfield);
+                foutC.precision(5);
+                foutC << MapPoint->second.count << " "
+                      << pai << endl;
+                foutC.close();
+            }
             MapPoint->second.state = MappointState::Converged;
         }
     }
@@ -190,9 +197,85 @@ ROS_INFO_STREAM("Converged cost:"<<MapPoint->second.count<<" pai:"<<pai);
 
 void Filter::Remove_MapPoint(int MapPoint_Index)
 {
-    std::map<int, Mappoint>::iterator MapPoint = MapPoints.find(MapPoint_Index);
-    if(MapPoint != MapPoints.end())
+    int statistics_index = MapPoint_Index / 100;
+    std::map<int, statistical_data>::iterator statistic = statistics.find(statistics_index);
+    if(statistic != statistics.end())
     {
-        MapPoints.erase(MapPoint);
+        std::map<int, Mappoint>::iterator MapPoint = MapPoints.find(MapPoint_Index);
+        if(MapPoint != MapPoints.end())
+        {
+            switch (MapPoint->second.state)
+            {
+                case MappointState::Converged:
+                    statistic->second.con++;
+                    break;
+
+                case MappointState::Estimate:
+                    statistic->second.est++;
+                    break;
+
+                case MappointState::Throw:
+                    statistic->second.div++;
+                    break;
+
+                default:
+                    break;
+            }
+            MapPoints.erase(MapPoint);
+        }
+        else
+        {
+            statistic->second.no++;
+        }
     }
+    else
+    {
+        statistical_data new_statistic;
+        statistics[statistics_index] = new_statistic;
+        statistical_data &tem_statistic = statistics[statistics_index];
+
+        std::map<int, Mappoint>::iterator MapPoint = MapPoints.find(MapPoint_Index);
+        if(MapPoint != MapPoints.end())
+        {
+            switch (MapPoint->second.state)
+            {
+                case MappointState::Converged:
+                    tem_statistic.con++;
+                    break;
+
+                case MappointState::Estimate:
+                    tem_statistic.est++;
+                    break;
+
+                case MappointState::Throw:
+                    tem_statistic.div++;
+                    break;
+
+                default:
+                    break;
+            }
+            MapPoints.erase(MapPoint);
+        }
+        else
+        {
+            tem_statistic.no++;
+        }
+    }
+}
+
+void Filter::printStatistics()
+{
+    using namespace std;
+    ofstream foutC(PGMF_percent_RESULT_PATH, ios::app);
+    foutC.setf(ios::fixed, ios::floatfield);
+    foutC.precision(5);
+    for (auto statistic = statistics.begin(); statistic != statistics.end(); statistic++)
+    {
+        foutC << statistic->first << " "
+              << statistic->second.con << " "
+              << statistic->second.est << " "
+              << statistic->second.div << " "
+              << statistic->second.no << endl;
+    }
+    foutC.close();
 }
