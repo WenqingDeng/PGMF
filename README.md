@@ -2,7 +2,8 @@
 ## **Perpendicular-based 3D Gaussian-Uniform Mappoint Filter**
 **04 June 2024**: An initial version of PGMF, which supports monocular camera + IMU.
 
-![PGMF-VINS.svg](PGMF-VINS.svg)
+![Image](./PGMF-VINS.svg)
+![Video](./PGMF-VINS.gif)
 
 PGMF is a **monocular VIO SLAM algorithm**. This algorithm proposes a convergence strategy for mappoints which can effectively improve the quality of the map while ensuring state-of-the-art  accuracy of localization. 
 
