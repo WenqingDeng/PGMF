@@ -9,7 +9,7 @@ PGMF is a **monocular VIO SLAM algorithm**. This algorithm proposes a convergenc
 
 
 
-### **1. Prerequisites**
+## **1. Prerequisites**
 **1.1  Ubuntu and ROS :** Ubuntu 20.04 and ROS Noetic.
 
 **1.2  Eigen :** Eigen 3.3.7.
@@ -21,7 +21,7 @@ PGMF is a **monocular VIO SLAM algorithm**. This algorithm proposes a convergenc
 
 
 
-### 2. **Build PGMF program**
+## 2. **Build PGMF program**
 Clone the repository and catkin_make:
 
 ```
@@ -34,7 +34,7 @@ source ./devel/setup.bash
 
 
 
-### 3. **Visual-Inertial Odometry on Public datasets**
+## 3. **Visual-Inertial Odometry on Public datasets**
 Download [**EuRoC MAV Dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets).**
 
 You can also test on [**ETH-asl cla dataset**](http://robotics.ethz.ch/~asl-datasets/maplab/multi_session_mapping_CLA/bags/), but we do not provide parameters settings, so you have to adjust the parameters in config file.
@@ -49,7 +49,7 @@ rosbag play YOUR_PATH_TO_DATASET/MH_01_easy.bag
 
 
 
-### 4. Run on your device
+## 4. Run on your device
 4.1 Ensure that the prerequisites completed properly.
 
 4.2 Change to your topic name in the config file.
@@ -61,11 +61,11 @@ rosbag play YOUR_PATH_TO_DATASET/MH_01_easy.bag
 
 
 
-### 5. **Related Papers**
+## 5. **Related Papers**
 The paper is currently under review of **PG2024**.
 
 
 
 
-### 6. **Licence**
+## 6. **Licence**
 The source code is released under **[GPLv3](http://www.gnu.org/licenses/)** license.
