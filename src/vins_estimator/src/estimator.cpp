@@ -173,6 +173,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
         TicToc t_solve;
         solveOdometry();
         ROS_DEBUG("solver costs: %fms", t_solve.toc());
+        
         if (failureDetection())
         {
             ROS_WARN("failure detection!");

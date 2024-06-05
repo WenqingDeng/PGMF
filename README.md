@@ -2,12 +2,10 @@
 ## **Perpendicular-based 3D Gaussian-Uniform Mappoint Filter**
 **04 June 2024**: An initial version of PGMF, which supports monocular camera + IMU.
 
-![PGMF-VINS.svg](PGMF-VINS.svg)
+![Image](./PGMF-VINS.svg)
+![Video](./PGMF-VINS.mp4)
 
 PGMF is a **monocular VIO SLAM algorithm**. This algorithm proposes a convergence strategy for mappoints which can effectively improve the quality of the map while ensuring state-of-the-art  accuracy of localization. 
-
-
-
 
 ## **1. Prerequisites**
 **1.1  Ubuntu and ROS :** Ubuntu 20.04 and ROS Noetic.
@@ -18,9 +16,6 @@ PGMF is a **monocular VIO SLAM algorithm**. This algorithm proposes a convergenc
 
 **1.4  Sophus:**  Sophus 1.22.10. You can get from [**sophus website**](https://github.com/strasdat/Sophus).
 
-
-
-
 ## 2. **Build PGMF program**
 Clone the repository and catkin_make:
 
@@ -30,9 +25,6 @@ cd PGMF/
 catkin_make
 source ./devel/setup.bash
 ```
-
-
-
 
 ## 3. **Visual-Inertial Odometry on Public datasets**
 Download [**EuRoC MAV Dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets).**
@@ -46,9 +38,6 @@ roslaunch demo euroc.launch
 rosbag play YOUR_PATH_TO_DATASET/MH_01_easy.bag 
 ```
 
-
-
-
 ## 4. Run on your device
 4.1 Ensure that the prerequisites completed properly.
 
@@ -58,14 +47,8 @@ rosbag play YOUR_PATH_TO_DATASET/MH_01_easy.bag
 
 4.4 Other parameter: make appropriate adjustments of other parameters in the config file to achieve better results.
 
-
-
-
 ## 5. **Related Papers**
 The paper is currently under review of **PG2024**.
-
-
-
 
 ## 6. **Licence**
 The source code is released under **[GPLv3](http://www.gnu.org/licenses/)** license.
