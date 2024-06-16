@@ -826,7 +826,7 @@ void Estimator::updateMappoints()
         {
             int &start_index = it_per_id.start_frame;
             Pose old_pose(Rwc[start_index], Pwc[start_index]);
-            Pose new_pose(Rwc[WINDOW_SIZE] * ric[0], Rwc[WINDOW_SIZE] * tic[0] + Pwc[WINDOW_SIZE]);
+            Pose new_pose(Rwc[WINDOW_SIZE], Pwc[WINDOW_SIZE]);
             Vector3d &old_point = it_per_id.feature_per_frame[0].point;
             Vector3d &new_point = it_per_id.feature_per_frame.back().point;
             PGMF->updateMapPoint(it_per_id.feature_id, old_pose, old_point, new_pose, new_point);
