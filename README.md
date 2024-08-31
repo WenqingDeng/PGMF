@@ -48,7 +48,7 @@ rosbag play YOUR_PATH_TO_DATASET/MH_01_easy.bag
 4.4 Other parameter: make appropriate adjustments of other parameters in the config file to achieve better results.
 
 ## 5. **Related Papers**
-The paper is currently under review of **PG2024**.
+The paper is currently under review.
 
 ## 6. **Licence**
 The source code is released under **[GPLv3](http://www.gnu.org/licenses/)** license.
