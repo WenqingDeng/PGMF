@@ -48,7 +48,7 @@ rosbag play YOUR_PATH_TO_DATASET/MH_01_easy.bag
 4.4 Other parameter: make appropriate adjustments of other parameters in the config file to achieve better results.
 
 ## 5. **Related Papers**
-The paper is currently under review.
+Deng, Wenqing, Zhe Yan, Bo Hu, Zhiyan Dong, and Lihua Zhang. 2024. "PGMF-VINS: Perpendicular-Based 3D Gaussian–Uniform Mixture Filter" Sensors 24, no. 19: 6482. https://doi.org/10.3390/s24196482.
 
 ## 6. **Licence**
 The source code is released under **[GPLv3](http://www.gnu.org/licenses/)** license.
